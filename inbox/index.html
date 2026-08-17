@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contact Me Widget Builder</title>
+<style>
+  :root{
+    --navy:#0D1321; --navy2:#101828; --teal:#00A794; --teal2:#2dd4bf;
+    --green:#16E08A; --ink:#e6edf6; --sub:#9fb0c4; --line:#1f2a3d; --card:#111826;
+    --danger:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--navy);color:var(--ink)}
+  header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.2px}
+  header p{margin:2px 0 0;color:var(--sub);font-size:12.5px}
+  .badge{font-size:11px;color:var(--teal2);border:1px solid #2dd4bf55;padding:4px 10px;border-radius:20px}
+
+  .tabs{display:flex;gap:6px;padding:10px 22px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tab-btn{background:none;border:none;color:var(--sub);padding:10px 14px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;font-weight:600}
+  .tab-btn.active{color:var(--ink);border-bottom-color:var(--teal)}
+  .tab-btn:hover{color:var(--ink)}
+
+  main{padding:20px 22px 60px;max-width:1180px;margin:0 auto}
+  .tabpane{display:none}
+  .tabpane.active{display:block}
+
+  .grid{display:grid;grid-template-columns:380px 1fr;gap:20px}
+  @media (max-width:880px){.grid{grid-template-columns:1fr}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .card + .card{margin-top:16px}
+  .card h2{font-size:13px;margin:0 0 12px;color:var(--teal2);text-transform:uppercase;letter-spacing:.6px}
+
+  label{display:block;font-size:12px;color:var(--sub);margin:12px 0 5px}
+  label:first-child{margin-top:0}
+  input[type=text],input[type=email],input[type=url],select,textarea{
+    width:100%;background:#0b111c;border:1px solid var(--line);color:var(--ink);
+    padding:9px 10px;border-radius:8px;font-size:13px;font-family:inherit
+  }
+  input[type=color]{width:44px;height:32px;padding:2px;background:#0b111c;border:1px solid var(--line);border-radius:6px;cursor:pointer}
+  textarea{resize:vertical;min-height:60px}
+  .row{display:flex;gap:10px;align-items:center}
+  .row > *{flex:1}
+  .check-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+  .check-row input{width:auto}
+  .check-row label{margin:0;color:var(--ink);font-size:13px}
+  .hint{font-size:11.5px;color:#6c7c93;margin-top:5px}
+
+  .btn{background:var(--teal);color:#03130f;border:none;padding:9px 16px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}
+  .btn:hover{background:var(--teal2)}
+  .btn.secondary{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .btn.secondary:hover{border-color:var(--teal)}
+  .btn.danger{background:transparent;border:1px solid #ff6b6b55;color:var(--danger)}
+  .btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+
+  .preview-frame-wrap{background:#0b111c url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20" fill="%230e1524"/></svg>');border:1px solid var(--line);border-radius:12px;overflow:hidden;height:560px}
+  iframe{width:100%;height:100%;border:none;background:#f4f6f9}
+
+  pre{background:#0b111c;border:1px solid var(--line);border-radius:8px;padding:14px;overflow:auto;font-size:12px;font-family:Consolas,"JetBrains Mono",monospace;color:#c9d6e6;max-height:340px}
+  .code-card{position:relative}
+  .copy-btn{position:absolute;top:10px;right:10px}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--sub);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  tr:last-child td{border-bottom:none}
+  .status-pill{padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:700}
+  .status-sent{background:#16E08A22;color:var(--green)}
+  .status-simulated{background:#f6c65422;color:#f6c654}
+  .status-failed{background:#ff6b6b22;color:var(--danger)}
+  .empty{color:var(--sub);font-size:13px;padding:20px 4px;text-align:center}
+  .toast{position:fixed;bottom:18px;right:18px;background:#0b111c;border:1px solid var(--teal);color:var(--ink);
+    padding:10px 16px;border-radius:8px;font-size:12.5px;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .flag{display:inline-block;font-size:10.5px;color:#f6c654;border:1px solid #f6c65455;padding:2px 8px;border-radius:12px;margin-left:6px}
+  .subgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>✉ Contact Me Widget Builder</h1>
+    <p>Build an embeddable "Contact Me" lead-capture widget, wire it to a CRM webhook, grab the snippet.</p>
+  </div>
+  <span class="badge">Runs fully client-side · no data leaves this page except your own CRM/webhook call</span>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="configure">⚙ Configure</button>
+  <button class="tab-btn" data-tab="preview">👁 Preview</button>
+  <button class="tab-btn" data-tab="code">&lt;/&gt; Get Embed Code</button>
+  <button class="tab-btn" data-tab="leads">📋 Test Leads Log</button>
+</div>
+
+<main>
+
+  <!-- CONFIGURE -->
+  <section class="tabpane active" id="tab-configure">
+    <div class="grid">
+      <div>
+        <div class="card">
+          <h2>Widget Copy</h2>
+          <label>Heading</label>
+          <input type="text" id="cfg-title" maxlength="60">
+          <label>Subheading</label>
+          <textarea id="cfg-subtitle" maxlength="160"></textarea>
+          <label>Floating button label</label>
+          <input type="text" id="cfg-buttonLabel" maxlength="30">
+          <label>Success message</label>
+          <textarea id="cfg-successMessage" maxlength="200"></textarea>
+        </div>
+
+        <div class="card">
+          <h2>Appearance</h2>
+          <div class="row">
+            <div>
+              <label>Accent color</label>
+              <div class="row" style="align-items:center">
+                <input type="color" id="cfg-color">
+                <input type="text" id="cfg-colorHex" maxlength="7" style="flex:2">
+              </div>
+            </div>
+            <div>
+              <label>Screen position</label>
+              <select id="cfg-position">
+                <option value="bottom-right">Bottom right</option>
+                <option value="bottom-left">Bottom left</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Form Fields</h2>
+          <div class="check-row"><input type="checkbox" id="cfg-field-name" checked disabled><label>Name (always on)</label></div>
+          <div class="check-row"><input type="checkbox" id="cfg-field-email" checked disabled><label>Email (always on)</label></div>
+          <div class="check-row"><input type="checkbox" id="cfg-field-phone"><label>Phone number</label></div>
+          <div class="check-row"><input type="checkbox" id="cfg-field-message" checked><label>Message</label></div>
+          <div class="hint">Every submission is stamped with page URL and timestamp automatically for CRM context.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>Where Leads Go (CRM Connection)</h2>
+          <label>Delivery method</label>
+          <select id="cfg-preset">
+            <option value="mailto">Email only — no CRM (mailto:, works instantly)</option>
+            <option value="generic">Generic webhook (Zapier / Make / n8n / custom backend)</option>
+            <option value="hubspot">HubSpot Forms Submission API</option>
+            <option value="salesforce">Salesforce Web-to-Lead</option>
+          </select>
+
+          <div id="fields-mailto" class="crm-fields">
+            <label>Destination email address</label>
+            <input type="text" id="cfg-mailto" placeholder="sales@yourcompany.com">
+            <div class="hint">Opens the visitor's email client with a pre-filled message. No server or CRM needed.</div>
+          </div>
+
+          <div id="fields-generic" class="crm-fields" style="display:none">
+            <label>Webhook URL</label>
+            <input type="url" id="cfg-webhook" placeholder="https://hooks.zapier.com/hooks/catch/xxxxx/xxxxx/">
+            <div class="hint">The widget POSTs JSON <code>{name,email,phone,message,pageUrl,submittedAt}</code>. Point this at a Zapier "Catch Hook", Make webhook, n8n webhook node, or your own API endpoint that forwards into your CRM.</div>
+          </div>
+
+          <div id="fields-hubspot" class="crm-fields" style="display:none">
+            <div class="subgrid">
+              <div><label>Portal ID</label><input type="text" id="cfg-hs-portal" placeholder="12345678"></div>
+              <div><label>Form GUID</label><input type="text" id="cfg-hs-form" placeholder="a1b2c3d4-..."></div>
+            </div>
+            <div class="hint">Find these in HubSpot: Marketing → Forms → your form → Embed → "Raw HTML" shows the Portal ID and Form GUID. <span class="flag">DATA NEEDED — real HubSpot IDs</span></div>
+          </div>
+
+          <div id="fields-salesforce" class="crm-fields" style="display:none">
+            <label>Web-to-Lead Organization ID (oid)</label>
+            <input type="text" id="cfg-sf-oid" placeholder="00Dxxxxxxxxxxxx">
+            <div class="hint">Salesforce Setup → Web-to-Lead → Create Web-to-Lead Form gives the <code>oid</code>. This submits a real HTML form POST per Salesforce's documented method. <span class="flag">DATA NEEDED — real SF org id</span></div>
+          </div>
+
+          <div class="check-row"><input type="checkbox" id="cfg-honeypot" checked><label>Include spam honeypot trap (recommended)</label></div>
+        </div>
+
+        <div class="card">
+          <h2>Save</h2>
+          <div class="hint">Settings autosave to this browser's local storage as you edit. Nothing is sent anywhere until you generate and publish the embed code on your own site.</div>
+          <div class="btn-row">
+            <button class="btn" id="btn-save">Save Configuration</button>
+            <button class="btn secondary" id="btn-reset">Reset to Defaults</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PREVIEW -->
+  <section class="tabpane" id="tab-preview">
+    <div class="card">
+      <h2>Live Preview</h2>
+      <div class="hint" style="margin-bottom:10px">This is a real, working render of the widget with your current settings — click the floating button, submit the form, then check the "Test Leads Log" tab.</div>
+      <div class="preview-frame-wrap"><iframe id="preview-iframe" sandbox="allow-scripts allow-forms allow-popups allow-same-origin allow-modals"></iframe></div>
+    </div>
+  </section>
+
+  <!-- CODE -->
+  <section class="tabpane" id="tab-code">
+    <div class="card code-card">
+      <h2>Option A — Script Embed (recommended)</h2>
+      <div class="hint" style="margin-bottom:10px">Paste this just before <code>&lt;/body&gt;</code> on any page of your website. Works on WordPress (Custom HTML block / footer scripts), Webflow, Shopify, Squarespace code injection, or a hand-built site.</div>
+      <button class="btn secondary copy-btn" data-copy="code-script">Copy</button>
+      <pre id="code-script"></pre>
+      <div class="btn-row"><button class="btn secondary" id="dl-script">Download contact-widget.js</button></div>
+    </div>
+
+    <div class="card code-card">
+      <h2>Option B — Standalone Page (for iframe embed / landing pages)</h2>
+      <div class="hint" style="margin-bottom:10px">A full standalone HTML page containing just the contact form. Host it anywhere and embed with an <code>&lt;iframe&gt;</code> on platforms that block <code>&lt;script&gt;</code> tags.</div>
+      <button class="btn secondary copy-btn" data-copy="code-iframe">Copy iframe tag</button>
+      <pre id="code-iframe"></pre>
+      <div class="btn-row"><button class="btn secondary" id="dl-standalone">Download contact-widget-standalone.html</button></div>
+    </div>
+  </section>
+
+  <!-- LEADS -->
+  <section class="tabpane" id="tab-leads">
+    <div class="card">
+      <h2>Test Leads Captured in Preview</h2>
+      <div class="hint" style="margin-bottom:10px">Submissions you make in the Preview tab land here so you can confirm field capture and delivery status before going live. This log lives only in this browser (localStorage) — it is not a real CRM.</div>
+      <div id="leads-table"></div>
+      <div class="btn-row">
+        <button class="btn secondary" id="btn-export-csv">Export CSV</button>
+        <button class="btn danger" id="btn-clear-leads">Clear Log</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DEFAULTS = {
+    title: "Get in Touch",
+    subtitle: "We usually reply within a few hours.",
+    buttonLabel: "Contact Me",
+    successMessage: "Thanks — we got your message and will be in touch shortly.",
+    color: "#00A794",
+    position: "bottom-right",
+    fields: { phone: false, message: true },
+    preset: "mailto",
+    mailto: "",
+    webhook: "",
+    hsPortal: "",
+    hsForm: "",
+    sfOid: "",
+    honeypot: true
+  };
+
+  var STORE_KEY = "contactWidgetBuilder.config";
+  var LEADS_KEY = "contactWidgetBuilder.testLeads";
+
+  function loadConfig(){
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return Object.assign({}, DEFAULTS);
+      var parsed = JSON.parse(raw);
+      return Object.assign({}, DEFAULTS, parsed, { fields: Object.assign({}, DEFAULTS.fields, parsed.fields || {}) });
+    } catch(e){ return Object.assign({}, DEFAULTS); }
+  }
+
+  function saveConfig(cfg){
+    localStorage.setItem(STORE_KEY, JSON.stringify(cfg));
+  }
+
+  function loadLeads(){
+    try { return JSON.parse(localStorage.getItem(LEADS_KEY) || "[]"); } catch(e){ return []; }
+  }
+  function saveLeads(list){ localStorage.setItem(LEADS_KEY, JSON.stringify(list)); }
+
+  var cfg = loadConfig();
+
+  // ---------- tabs ----------
+  var tabBtns = document.querySelectorAll(".tab-btn");
+  var panes = document.querySelectorAll(".tabpane");
+  tabBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      tabBtns.forEach(function(b){ b.classList.remove("active"); });
+      panes.forEach(function(p){ p.classList.remove("active"); });
+      btn.classList.add("active");
+      document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+      if (btn.dataset.tab === "preview") renderPreview();
+      if (btn.dataset.tab === "code") renderCode();
+      if (btn.dataset.tab === "leads") renderLeads();
+    });
+  });
+
+  // ---------- form binding ----------
+  var els = {
+    title: document.getElementById("cfg-title"),
+    subtitle: document.getElementById("cfg-subtitle"),
+    buttonLabel: document.getElementById("cfg-buttonLabel"),
+    successMessage: document.getElementById("cfg-successMessage"),
+    color: document.getElementById("cfg-color"),
+    colorHex: document.getElementById("cfg-colorHex"),
+    position: document.getElementById("cfg-position"),
+    fieldPhone: document.getElementById("cfg-field-phone"),
+    fieldMessage: document.getElementById("cfg-field-message"),
+    preset: document.getElementById("cfg-preset"),
+    mailto: document.getElementById("cfg-mailto"),
+    webhook: document.getElementById("cfg-webhook"),
+    hsPortal: document.getElementById("cfg-hs-portal"),
+    hsForm: document.getElementById("cfg-hs-form"),
+    sfOid: document.getElementById("cfg-sf-oid"),
+    honeypot: document.getElementById("cfg-honeypot")
+  };
+
+  function applyConfigToForm(c){
+    els.title.value = c.title;
+    els.subtitle.value = c.subtitle;
+    els.buttonLabel.value = c.buttonLabel;
+    els.successMessage.value = c.successMessage;
+    els.color.value = c.color;
+    els.colorHex.value = c.color;
+    els.position.value = c.position;
+    els.fieldPhone.checked = !!c.fields.phone;
+    els.fieldMessage.checked = !!c.fields.message;
+    els.preset.value = c.preset;
+    els.mailto.value = c.mailto;
+    els.webhook.value = c.webhook;
+    els.hsPortal.value = c.hsPortal;
+    els.hsForm.value = c.hsForm;
+    els.sfOid.value = c.sfOid;
+    els.honeypot.checked = !!c.honeypot;
+    updateCrmFieldVisibility();
+  }
+
+  function readFormToConfig(){
+    cfg = {
+      title: els.title.value || DEFAULTS.title,
+      subtitle: els.subtitle.value,
+      buttonLabel: els.buttonLabel.value || DEFAULTS.buttonLabel,
+      successMessage: els.successMessage.value || DEFAULTS.successMessage,
+      color: /^#[0-9a-fA-F]{6}$/.test(els.colorHex.value) ? els.colorHex.value : els.color.value,
+      position: els.position.value,
+      fields: { phone: els.fieldPhone.checked, message: els.fieldMessage.checked },
+      preset: els.preset.value,
+      mailto: els.mailto.value.trim(),
+      webhook: els.webhook.value.trim(),
+      hsPortal: els.hsPortal.value.trim(),
+      hsForm: els.hsForm.value.trim(),
+      sfOid: els.sfOid.value.trim(),
+      honeypot: els.honeypot.checked
+    };
+    return cfg;
+  }
+
+  function updateCrmFieldVisibility(){
+    document.querySelectorAll(".crm-fields").forEach(function(el){ el.style.display = "none"; });
+    var target = document.getElementById("fields-" + els.preset.value);
+    if (target) target.style.display = "";
+  }
+
+  Object.keys(els).forEach(function(k){
+    var el = els[k];
+    if (!el) return;
+    var evt = (el.tagName === "SELECT" || el.type === "checkbox" || el.type === "color") ? "change" : "input";
+    el.addEventListener(evt, function(){
+      if (k === "color") els.colorHex.value = els.color.value;
+      if (k === "colorHex" && /^#[0-9a-fA-F]{6}$/.test(els.colorHex.value)) els.color.value = els.colorHex.value;
+      if (k === "preset") updateCrmFieldVisibility();
+      readFormToConfig();
+      saveConfig(cfg);
+    });
+  });
+
+  document.getElementById("btn-save").addEventListener("click", function(){
+    readFormToConfig();
+    saveConfig(cfg);
+    showToast("Configuration saved");
+  });
+  document.getElementById("btn-reset").addEventListener("click", function(){
+    cfg = Object.assign({}, DEFAULTS);
+    saveConfig(cfg);
+    applyConfigToForm(cfg);
+    showToast("Reset to defaults");
+  });
+
+  applyConfigToForm(cfg);
+
+  // ---------- toast ----------
+  var toastEl = document.getElementById("toast");
+  var toastTimer;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2400);
+  }
+
+  // ---------- widget generator (shared by preview / script / standalone) ----------
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  }); }
+  function jsStr(s){ return JSON.stringify(String(s == null ? "" : s)); }
+
+  // Produces the full widget JS as a string (IIFE). Used verbatim for the script-embed
+  // output, and injected into an inline <script> for the live preview / standalone page.
+  function buildWidgetScript(c){
+    return [
+"(function(){",
+'  "use strict";',
+"  var CFG = {",
+"    title: " + jsStr(c.title) + ",",
+"    subtitle: " + jsStr(c.subtitle) + ",",
+"    buttonLabel: " + jsStr(c.buttonLabel) + ",",
+"    successMessage: " + jsStr(c.successMessage) + ",",
+"    color: " + jsStr(c.color) + ",",
+"    position: " + jsStr(c.position) + ",",
+"    showPhone: " + (!!c.fields.phone) + ",",
+"    showMessage: " + (!!c.fields.message) + ",",
+"    preset: " + jsStr(c.preset) + ",",
+"    mailto: " + jsStr(c.mailto) + ",",
+"    webhook: " + jsStr(c.webhook) + ",",
+"    hsPortal: " + jsStr(c.hsPortal) + ",",
+"    hsForm: " + jsStr(c.hsForm) + ",",
+"    sfOid: " + jsStr(c.sfOid) + ",",
+"    honeypot: " + (!!c.honeypot),
+"  };",
+"",
+"  function el(tag, attrs, children){",
+"    var e = document.createElement(tag);",
+"    for (var k in attrs || {}) {",
+"      if (k === 'style') e.style.cssText = attrs[k];",
+"      else if (k.indexOf('on') === 0) e.addEventListener(k.slice(2), attrs[k]);",
+"      else e.setAttribute(k, attrs[k]);",
+"    }",
+"    (children || []).forEach(function(c){ if (c) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });",
+"    return e;",
+"  }",
+"",
+"  var side = CFG.position === 'bottom-left' ? 'left:20px;' : 'right:20px;';",
+"  var root = el('div', { id: 'contact-me-widget-root', style: 'position:fixed;bottom:20px;' + side + 'z-index:999999;font:14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif;' });",
+"",
+"  var toggleBtn = el('button', {",
+"    style: 'background:' + CFG.color + ';color:#fff;border:none;border-radius:999px;padding:13px 20px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25);'",
+"  }, [CFG.buttonLabel]);",
+"",
+"  var panelWrap = el('div', { style: 'display:none;margin-bottom:12px;width:300px;max-width:calc(100vw - 40px);background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.3);overflow:hidden;' });",
+"",
+"  var head = el('div', { style: 'background:' + CFG.color + ';color:#fff;padding:16px 18px;' }, [",
+"    el('div', { style: 'font-weight:700;font-size:15px;' }, [CFG.title]),",
+"    el('div', { style: 'font-size:12.5px;opacity:.9;margin-top:2px;' }, [CFG.subtitle])",
+"  ]);",
+"",
+"  var body = el('div', { style: 'padding:16px 18px;' });",
+"  var statusMsg = el('div', { style: 'font-size:12.5px;margin-top:4px;display:none;' });",
+"",
+"  var nameInput = el('input', { type: 'text', placeholder: 'Your name', required: 'required', style: fieldStyle() });",
+"  var emailInput = el('input', { type: 'email', placeholder: 'you@example.com', required: 'required', style: fieldStyle() });",
+"  var phoneInput = CFG.showPhone ? el('input', { type: 'text', placeholder: 'Phone (optional)', style: fieldStyle() }) : null;",
+"  var msgInput = CFG.showMessage ? el('textarea', { placeholder: 'How can we help?', rows: '3', style: fieldStyle() + 'resize:vertical;' }) : null;",
+"  var honeypot = el('input', { type: 'text', tabindex: '-1', autocomplete: 'off', style: 'position:absolute;left:-9999px;width:1px;height:1px;opacity:0;' });",
+"",
+"  function fieldStyle(){",
+"    return 'width:100%;box-sizing:border-box;padding:9px 10px;margin-bottom:9px;border:1px solid #dbe2ea;border-radius:8px;font-size:13px;font-family:inherit;color:#1a2233;';",
+"  }",
+"",
+"  var submitBtn = el('button', { type: 'submit', style: 'width:100%;background:' + CFG.color + ';color:#fff;border:none;padding:11px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;' }, ['Send']);",
+"",
+"  var form = el('form', {}, [",
+"    el('label', { style: 'display:block;font-size:11.5px;color:#5b6b80;margin:0 0 3px;font-weight:600;' }, ['Name']), nameInput,",
+"    el('label', { style: 'display:block;font-size:11.5px;color:#5b6b80;margin:0 0 3px;font-weight:600;' }, ['Email']), emailInput,",
+"    CFG.showPhone ? el('label', { style: 'display:block;font-size:11.5px;color:#5b6b80;margin:0 0 3px;font-weight:600;' }, ['Phone']) : null, phoneInput,",
+"    CFG.showMessage ? el('label', { style: 'display:block;font-size:11.5px;color:#5b6b80;margin:0 0 3px;font-weight:600;' }, ['Message']) : null, msgInput,",
+"    honeypot,",
+"    submitBtn,",
+"    statusMsg",
+"  ]);",
+"",
+"  body.appendChild(form);",
+"  panelWrap.appendChild(head);",
+"  panelWrap.appendChild(body);",
+"  root.appendChild(panelWrap);",
+"  root.appendChild(toggleBtn);",
+"  document.body.appendChild(root);",
+"",
+"  toggleBtn.addEventListener('click', function(){",
+"    var open = panelWrap.style.display !== 'none';",
+"    panelWrap.style.display = open ? 'none' : 'block';",
+"  });",
+"",
+"  function setStatus(text, kind){",
+"    statusMsg.textContent = text;",
+"    statusMsg.style.display = 'block';",
+"    statusMsg.style.color = kind === 'error' ? '#c0392b' : (kind === 'warn' ? '#a5730b' : '#1a8f5c');",
+"  }",
+"",
+"  function backupLocally(lead, status){",
+"    try {",
+"      var key = 'contactWidget_backupLeads';",
+"      var list = JSON.parse(localStorage.getItem(key) || '[]');",
+"      list.push(Object.assign({}, lead, { status: status, capturedAt: new Date().toISOString() }));",
+"      localStorage.setItem(key, JSON.stringify(list));",
+"    } catch(e) {}",
+"    try {",
+"      window.parent && window.parent.postMessage({ __contactWidgetTestLead: true, lead: lead, status: status }, '*');",
+"    } catch(e) {}",
+"  }",
+"",
+"  form.addEventListener('submit', function(ev){",
+"    ev.preventDefault();",
+"    if (honeypot.value) { setStatus('Thanks!', 'ok'); form.reset(); return; }",
+"    if (!nameInput.value.trim() || !emailInput.value.trim()) { setStatus('Please fill in your name and email.', 'error'); return; }",
+"    var emailOk = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailInput.value.trim());",
+"    if (!emailOk) { setStatus('Please enter a valid email address.', 'error'); return; }",
+"",
+"    var lead = {",
+"      name: nameInput.value.trim(),",
+"      email: emailInput.value.trim(),",
+"      phone: phoneInput ? phoneInput.value.trim() : '',",
+"      message: msgInput ? msgInput.value.trim() : '',",
+"      pageUrl: (typeof location !== 'undefined' ? location.href : ''),",
+"      submittedAt: new Date().toISOString()",
+"    };",
+"",
+"    submitBtn.disabled = true;",
+"    setStatus('Sending...', 'warn');",
+"",
+"    function done(ok, note){",
+"      submitBtn.disabled = false;",
+"      if (ok) {",
+"        setStatus(CFG.successMessage, 'ok');",
+"        form.reset();",
+"        backupLocally(lead, 'sent');",
+"      } else {",
+"        setStatus(note || ('Something went wrong. Please email us directly.'), 'error');",
+"        backupLocally(lead, 'failed');",
+"      }",
+"    }",
+"",
+"    if (CFG.preset === 'mailto') {",
+"      if (!CFG.mailto) { done(false, 'No destination email configured yet.'); return; }",
+"      var subject = encodeURIComponent('New contact form message from ' + lead.name);",
+"      var bodyText = encodeURIComponent('Name: ' + lead.name + '\\nEmail: ' + lead.email + (lead.phone ? '\\nPhone: ' + lead.phone : '') + '\\n\\n' + lead.message + '\\n\\nSubmitted from: ' + lead.pageUrl);",
+"      var mailtoLink = document.createElement('a');",
+"      mailtoLink.href = 'mailto:' + CFG.mailto + '?subject=' + subject + '&body=' + bodyText;",
+"      document.body.appendChild(mailtoLink);",
+"      mailtoLink.click();",
+"      document.body.removeChild(mailtoLink);",
+"      done(true);",
+"      return;",
+"    }",
+"",
+"    if (CFG.preset === 'generic') {",
+"      if (!CFG.webhook) { done(false, 'No webhook URL configured yet.'); return; }",
+"      fetch(CFG.webhook, {",
+"        method: 'POST',",
+"        headers: { 'Content-Type': 'application/json' },",
+"        body: JSON.stringify(lead)",
+"      }).then(function(r){ done(true); }).catch(function(){ done(false); });",
+"      return;",
+"    }",
+"",
+"    if (CFG.preset === 'hubspot') {",
+"      if (!CFG.hsPortal || !CFG.hsForm) { done(false, 'HubSpot portal/form not configured yet.'); return; }",
+"      var hsUrl = 'https://api.hsforms.com/submissions/v3/integration/submit/' + CFG.hsPortal + '/' + CFG.hsForm;",
+"      var fields = [",
+"        { name: 'firstname', value: lead.name },",
+"        { name: 'email', value: lead.email }",
+"      ];",
+"      if (lead.phone) fields.push({ name: 'phone', value: lead.phone });",
+"      if (lead.message) fields.push({ name: 'message', value: lead.message });",
+"      fetch(hsUrl, {",
+"        method: 'POST',",
+"        headers: { 'Content-Type': 'application/json' },",
+"        body: JSON.stringify({ fields: fields, context: { pageUri: lead.pageUrl, pageName: document.title } })",
+"      }).then(function(r){ done(true); }).catch(function(){ done(false); });",
+"      return;",
+"    }",
+"",
+"    if (CFG.preset === 'salesforce') {",
+"      if (!CFG.sfOid) { done(false, 'Salesforce org id not configured yet.'); return; }",
+"      var sfForm = document.createElement('form');",
+"      sfForm.action = 'https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8';",
+"      sfForm.method = 'POST';",
+"      sfForm.target = '_blank';",
+"      sfForm.style.display = 'none';",
+"      function hidden(n, v){ var i = document.createElement('input'); i.type = 'hidden'; i.name = n; i.value = v; sfForm.appendChild(i); }",
+"      hidden('oid', CFG.sfOid);",
+"      hidden('first_name', lead.name);",
+"      hidden('email', lead.email);",
+"      hidden('phone', lead.phone);",
+"      hidden('description', lead.message);",
+"      hidden('retURL', lead.pageUrl);",
+"      document.body.appendChild(sfForm);",
+"      sfForm.submit();",
+"      document.body.removeChild(sfForm);",
+"      done(true);",
+"      return;",
+"    }",
+"",
+"    done(false, 'No delivery method configured.');",
+"  });",
+"})();"
+    ].join("\n");
+  }
+
+  // ---------- preview ----------
+  function renderPreview(){
+    readFormToConfig();
+    var iframe = document.getElementById("preview-iframe");
+    var script = buildWidgetScript(cfg);
+    var doc = "<!doctype html><html><head><meta charset='utf-8'>" +
+      "<style>body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;" +
+      "background:linear-gradient(135deg,#eef2f7,#e2e8f0);height:100vh;display:flex;align-items:center;justify-content:center;color:#33404f;}" +
+      ".mock{max-width:420px;text-align:center;padding:20px}" +
+      ".mock h2{margin:0 0 6px}.mock p{color:#7b8697;font-size:13px}</style></head>" +
+      "<body><div class='mock'><h2>Your Website</h2><p>This is a stand-in for your real page. The contact widget is live in the corner — try it.</p></div>" +
+      "<script>" + script + "<" + "/script></body></html>";
+    iframe.srcdoc = doc;
+  }
+
+  window.addEventListener("message", function(ev){
+    var data = ev.data;
+    if (!data || !data.__contactWidgetTestLead) return;
+    var leads = loadLeads();
+    leads.unshift(Object.assign({}, data.lead, { status: data.status, capturedAt: new Date().toISOString() }));
+    saveLeads(leads.slice(0, 200));
+    if (document.getElementById("tab-leads").classList.contains("active")) renderLeads();
+    showToast("Test lead captured (" + data.status + ")");
+  });
+
+  // ---------- code tab ----------
+  function renderCode(){
+    readFormToConfig();
+    var script = buildWidgetScript(cfg);
+    document.getElementById("code-script").textContent =
+      "<script>\n" + script + "\n</" + "script>";
+
+    var standalone = buildStandalonePage(cfg);
+    document.getElementById("code-iframe").textContent =
+      '<iframe src="https://YOUR-HOSTED-URL/contact-widget-standalone.html"\n' +
+      '  style="border:0;width:100%;max-width:360px;height:480px;"\n' +
+      '  title="Contact form"></iframe>\n\n' +
+      "<!-- Host the downloaded contact-widget-standalone.html file anywhere " +
+      "(your own server, GitHub Pages, Netlify, etc.) and point the iframe src at it. -->";
+  }
+
+  function buildStandalonePage(c){
+    var script = buildWidgetScript(c);
+    return "<!doctype html>\n<html><head><meta charset='utf-8'>" +
+      "<meta name='viewport' content='width=device-width,initial-scale=1'>" +
+      "<title>Contact Us</title>" +
+      "<style>body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f4f6f9;}</style>" +
+      "</head><body>\n<script>\n" + script + "\n</" + "script>\n" +
+      "<script>document.getElementById('contact-me-widget-root').querySelector('button').click();</" + "script>\n" +
+      "</body></html>";
+  }
+
+  document.querySelectorAll(".copy-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var text = document.getElementById(btn.dataset.copy).textContent;
+      copyText(text);
+      showToast("Copied to clipboard");
+    });
+  });
+
+  function copyText(text){
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(function(){ fallbackCopy(text); });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+  function fallbackCopy(text){
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); } catch(e){}
+    document.body.removeChild(ta);
+  }
+
+  function downloadBlob(filename, content, type){
+    var blob = new Blob([content], { type: type || "text/plain" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  document.getElementById("dl-script").addEventListener("click", function(){
+    readFormToConfig();
+    downloadBlob("contact-widget.js", buildWidgetScript(cfg), "text/javascript");
+  });
+  document.getElementById("dl-standalone").addEventListener("click", function(){
+    readFormToConfig();
+    downloadBlob("contact-widget-standalone.html", buildStandalonePage(cfg), "text/html");
+  });
+
+  // ---------- leads tab ----------
+  function renderLeads(){
+    var leads = loadLeads();
+    var wrap = document.getElementById("leads-table");
+    if (!leads.length) {
+      wrap.innerHTML = '<div class="empty">No test submissions yet. Go to Preview, click the widget button, and send a test message.</div>';
+      return;
+    }
+    var rows = leads.map(function(l){
+      var pillClass = l.status === "sent" ? "status-sent" : (l.status === "simulated" ? "status-simulated" : "status-failed");
+      return "<tr>" +
+        "<td>" + esc(l.name) + "</td>" +
+        "<td>" + esc(l.email) + "</td>" +
+        "<td>" + esc(l.phone) + "</td>" +
+        "<td>" + esc((l.message || "").slice(0,60)) + "</td>" +
+        "<td><span class='status-pill " + pillClass + "'>" + esc(l.status) + "</span></td>" +
+        "<td>" + esc(new Date(l.capturedAt).toLocaleString()) + "</td>" +
+        "</tr>";
+    }).join("");
+    wrap.innerHTML = "<table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Message</th><th>Status</th><th>Captured</th></tr></thead><tbody>" + rows + "</tbody></table>";
+  }
+
+  document.getElementById("btn-export-csv").addEventListener("click", function(){
+    var leads = loadLeads();
+    var header = ["name","email","phone","message","pageUrl","status","submittedAt","capturedAt"];
+    var lines = [header.join(",")];
+    leads.forEach(function(l){
+      lines.push(header.map(function(h){
+        var v = String(l[h] == null ? "" : l[h]).replace(/"/g, '""');
+        return '"' + v + '"';
+      }).join(","));
+    });
+    downloadBlob("contact-widget-test-leads.csv", lines.join("\n"), "text/csv");
+  });
+
+  document.getElementById("btn-clear-leads").addEventListener("click", function(){
+    saveLeads([]);
+    renderLeads();
+    showToast("Log cleared");
+  });
+
+  renderLeads();
+})();
+</script>
+
+</body>
+</html>

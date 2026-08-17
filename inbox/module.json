@@ -1,0 +1,8 @@
+{
+  "slug": "inbox",
+  "title": "Contact Me Widget Builder",
+  "desc": "create an email inbox for me",
+  "created": "2026-08-14T13:54:09.570Z",
+  "built": true,
+  "summary": "Builder tool for an embeddable 'Contact Me' lead widget: configure copy/appearance/CRM delivery (mailto, generic webhook for Zapier/Make/n8n, HubSpot Forms API, or Salesforce Web-to-Lead), live-test it in an in-page preview with a local test-leads log + CSV export, then copy/download the ready-to-paste script or standalone iframe embed."
+}
